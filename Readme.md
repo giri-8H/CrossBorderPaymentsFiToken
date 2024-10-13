@@ -31,7 +31,7 @@ This project demonstrates instant cross-border payments using a blockchain-based
 
 ### 1. Clone the Repository
 
-git clone https://github.com/giri-8H/cross-border-payments-fitoken.git
+git clone https://github.com/giri-8H/CrossBorderPaymentsFiToken.git
 cd cross-border-payments-fitoken
 
 
@@ -174,40 +174,123 @@ To interact with the deployed contracts, you can use a frontend interface. Here'
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cross-Border Payment</title>
+    <title>Cross-Border Payments Demo</title>
 </head>
 <body>
-    <h1>Cross-Border Payment with FiToken</h1>
+    <h1>Send Cross-Border Payment</h1>
     <input type="text" id="receiver" placeholder="Receiver Address">
-    <input type="text" id="amount" placeholder="Amount of FiToken">
+    <input type="text" id="amount" placeholder="Amount (in Ether)">
     <button id="sendPayment">Send Payment</button>
 
-    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
     <script>
-        const contractAddress = 'YOUR_CONTRACT_ADDRESS'; // Replace with your deployed contract address
-        const abi = [/* Your ABI goes here */]; // Replace with your contract ABI
-        const tokenAddress = 'YOUR_FITOKEN_ADDRESS'; // Replace with your FiToken address
+        // const web3 = new Web3(Web3.givenProvider || "http://localhost:7545");
+        let web3;
+        let contract;
+        const contractAddress = "0x7f12b1E0b1534788c0a53c9c97E9f39FFeb556Fd"; // Replace with your contract address
+        const contractABI = [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "PaymentSent",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "receiver",
+          "type": "address"
+        }
+      ],
+      "name": "sendPayment",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
+    }
+  ]; // Replace with the ABI from the build folder
 
-        window.addEventListener('load', async () => {
+  // Initialize the contract
+//   const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        async function load() {
             if (window.ethereum) {
-                const web3 = new Web3(window.ethereum);
-                await window.ethereum.enable();
+                web3 = new Web3(window.ethereum);
+                await ethereum.enable();
                 const accounts = await web3.eth.getAccounts();
-                const contract = new web3.eth.Contract(abi, contractAddress);
+                console.log('Connected account:', accounts[0]);
 
-                document.getElementById('sendPayment').onclick = async () => {
-                    const receiver = document.getElementById('receiver').value;
-                    const amount = document.getElementById('amount').value;
-
-                    await contract.methods.sendPayment(receiver, web3.utils.toWei(amount, 'ether')).send({ from: accounts[0] });
-                    alert('Payment sent successfully!');
-                };
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                console.log(contract)
             } else {
-                alert("Please install MetaMask!");
+                alert('Please install MetaMask or another Ethereum wallet.');
             }
-        });
+        }
+
+        async function sendPayment() {
+            const receiver = document.getElementById('receiver').value;
+            const amount = document.getElementById('amount').value;
+            const accounts = await web3.eth.getAccounts();
+
+           
+            try {
+                await contract.methods.sendPayment(receiver).send({
+                    from: accounts[0],
+                    value: web3.utils.toWei(amount, 'ether')
+                });
+                alert('Payment sent!');
+            } catch (error) {
+                console.error('Error sending payment:', error);
+            }
+
+            alert('Payment Sent!');
+        }
+
+        document.getElementById('sendPayment').onclick = sendPayment;
+
+        window.onload = load;
     </script>
 </body>
 </html>
+
 ```
 
